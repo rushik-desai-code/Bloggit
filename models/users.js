@@ -1,5 +1,6 @@
 const mongoose =require('mongoose')
 const {createHmac,randomBytes} =require("crypto")
+const {createTokenForUser,verifyToken}=require('../Services/authentication')
 
 const userSchema = new mongoose.Schema({
     fullName:{
@@ -45,7 +46,14 @@ userSchema.pre('save',async function(next){
 
 })
 
-userSchema.static('matchPassword',async function(email,password){
+userSchema.static('createUserandGenerateToken', async function(fullName,email,password){
+    const user=await this.create({fullName,email,password})
+    const token=createTokenForUser(user)
+    return token;
+
+})
+
+userSchema.static('matchPasswordandGenerateToken',async function(email,password){
     const user=await this.findOne({email})
 
     if (!user) throw new Error('User not found!');
@@ -57,7 +65,8 @@ userSchema.static('matchPassword',async function(email,password){
 
     if(hashedPassword!=userProvidedHash) throw new Error('incorrect password!')
 
-    return user;
+    const token=createTokenForUser(user)
+    return token;
 })
 
 const User =mongoose.model("blogify",userSchema)

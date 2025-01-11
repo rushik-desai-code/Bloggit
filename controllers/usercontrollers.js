@@ -3,22 +3,29 @@ const user= require('../models/users')
 async function userSignupHandler(req,res){
     const {fullName,email,password}= req.body;
 
-    await user.create({
-        fullName,email,password
-    })
+    try{
+        const token=await user.createUserandGenerateToken(fullName,email,password)
+        return res.cookie('token',token).redirect('/');
+    }catch(error){
+        return res.render('signup',{
+            error:'Trouble while creating user'
+        })
+    }
 
     return res.redirect('/')
 }
 
 async function userSigninHandler(req,res){
     const {email,password}=req.body;
+    try {
+        const token = await user.matchPasswordandGenerateToken(email,password)
 
-    const User = await user.matchPassword(email,password)
-
-    console.log(User)
-
-    return res.redirect('/')
-
+        return res.cookie("token",token).redirect('/');
+    } catch (error) {
+        return res.render('signin',{
+            error:'Incorrect email or password'
+        })
+    }
 }
 
 async function handleGetSignupPage(req,res){
@@ -29,6 +36,10 @@ async function handleGetSigninPage(req,res){
     res.render('signin')
 }
 
+async function userSignOutHandler(req,res){
+    res.clearCookie('token').redirect('/user/signin')
+}
 
 
-module.exports={userSignupHandler,handleGetSignupPage,handleGetSigninPage,userSigninHandler}
+
+module.exports={userSignupHandler,handleGetSignupPage,handleGetSigninPage,userSigninHandler,userSignOutHandler}
