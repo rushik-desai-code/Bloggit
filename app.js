@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express= require('express')
 const mongoose= require('mongoose')
 const path= require('path')
@@ -6,7 +7,6 @@ const blogRoutes=require('./routes/blog')
 const { urlencoded } = require('body-parser')
 const blog=require('./models/blog')
 const cookieParser =require('cookie-parser')
-const PORT = 8000
 const {checkForAuthenticationCookie}=require('./middlewares/authentication')
 const app=express()
 
@@ -16,7 +16,7 @@ app.use(cookieParser())
 app.use(express.urlencoded({extended:false}))
 app.use(express.static(path.resolve('./public')))
 
-mongoose.connect('mongodb://localhost:27017/blogify').then(e=>console.log('connected to mongodb'))
+mongoose.connect(process.env.MONGO_CONNECTION_STRING).then(e=>console.log('connected to mongodb'))
 app.use(checkForAuthenticationCookie("token"))
 
 
@@ -31,4 +31,4 @@ app.get('/',async (req,res)=>{
 app.use('/user',userRoutes);
 app.use('/blog',blogRoutes);
 
-app.listen(PORT,()=>console.log(`Server started at port ${PORT}`))
+app.listen(process.env.PORT || 8000,()=>console.log(`Server started at port ${process.env.PORT}`))
